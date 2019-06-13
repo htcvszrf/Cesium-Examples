@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <title>Entity实体</title>
+    <link href="../Build/Cesium/Widgets/widgets.css" rel="stylesheet" />
+    <script src="../Build/Cesium/Cesium.js"></script>
+    <style>
+        html,
+        body,
+        #cesiumContainer {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+    </style>
+
+</head>
+
+<body>
+    <div id="cesiumContainer"></div>
+    <script>
+        let osm = Cesium.createOpenStreetMapImageryProvider({
+            url: 'https://a.tile.openstreetmap.org/'
+        });
+        let viewer = new Cesium.Viewer('cesiumContainer', {
+            imageryProvider: osm,
+            contextOptions: {
+                webgl: {
+                    alpha: true
+                }
+            },
+            selectionIndicator: false,
+            animation: false,  //是否显示动画控件
+            baseLayerPicker: false, //是否显示图层选择控件
+            geocoder: false, //是否显示地名查找控件
+            timeline: false, //是否显示时间线控件
+            sceneModePicker: false, //是否显示投影方式控件
+            navigationHelpButton: false, //是否显示帮助信息控件
+            infoBox: false,  //是否显示点击要素之后显示的信息
+            fullscreenButton: false
+        });
+        //取消双击事件
+        viewer.cesiumWidget.screenSpaceEventHandler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
+        //设置homebutton的位置
+        Cesium.Camera.DEFAULT_VIEW_RECTANGLE =
+            Cesium.Rectangle.fromDegrees(110.15, 34.54, 110.25, 34.56);//Rectangle(west, south, east, north)
+        //设置初始位置
+        viewer.camera.setView({
+            destination: Cesium.Cartesian3.fromDegrees(110.20, 34.55, 3000000)
+        });
+
+        //开启深度检测
+        viewer.scene.globe.depthTestAgainstTerrain = true;
+
+        //圆柱体
+        viewer.entities.add({
+            name: '圆柱体',
+            position: Cesium.Cartesian3.fromDegrees(104.0, 30.0, 200000.0),
+            cylinder: {
+                length: 400000.0,//圆柱体高度
+                topRadius: 200000.0,//圆柱体的顶部半径。
+                bottomRadius: 200000.0,//    圆柱体底部的半径。
+                material: Cesium.Color.GREEN.withAlpha(0.5),//绿色半透明
+                outline: true,//轮廓
+                outlineColor: Cesium.Color.DARK_GREEN//轮廓颜色深绿色
+            }
+        });
+
+        //圆锥体
+        viewer.entities.add({
+            name: '圆锥体',
+            position: Cesium.Cartesian3.fromDegrees(115.0, 30.0, 200000.0),
+            cylinder: {
+                length: 400000.0,
+                topRadius: 0.0,
+                bottomRadius: 200000.0,
+                material: Cesium.Color.RED.withAlpha(0.5)
+            }
+        });
+
+        //多边形
+        viewer.entities.add({
+            name: '红色多边形',
+            polygon: {
+                hierarchy: Cesium.Cartesian3.fromDegreesArray([-115.0, 37.0,
+                -115.0, 32.0,
+                -107.0, 33.0,
+                -102.0, 31.0,
+                -102.0, 35.0]),//hierarchy多边形层次
+                material: Cesium.Color.RED
+            }
+        });
+
+        //多边形
+        viewer.entities.add({
+            name: '绿色多边形',
+            polygon: {
+                hierarchy: Cesium.Cartesian3.fromDegreesArray([-108.0, 42.0,
+                -100.0, 42.0,
+                -104.0, 40.0]),
+                extrudedHeight: 500000.0,//多边形的挤出面和椭圆面之间的距离（以米为单位）
+                material: Cesium.Color.GREEN,
+                closeTop: false,
+                closeBottom: true//是否闭合
+            }
+        });
+
+        //多边形
+        viewer.entities.add({
+            name: '橙色多边形',
+            polygon: {
+                hierarchy: Cesium.Cartesian3.fromDegreesArrayHeights([-108.0, 25.0, 100000,
+                -100.0, 25.0, 100000,
+                -100.0, 30.0, 100000,
+                -108.0, 30.0, 300000]),
+                extrudedHeight: 0,//多边形的挤出面和椭圆面之间的距离（以米为单位）。
+                perPositionHeight: true,//对每个位置使用options.positions的height，而不使用options.height来确定高度
+                material: Cesium.Color.ORANGE.withAlpha(0.5),//橘色半透明
+                outline: true,
+                outlineColor: Cesium.Color.BLACK//黑色轮廓线
+            }
+        });
+
+        //多边形
+        viewer.entities.add({
+            name: '橙色多边形',
+            polygon: {
+                hierarchy: Cesium.Cartesian3.fromDegreesArrayHeights([-108.0, 5.0, 100000,
+                -100.0, 5.0, 100000,
+                -108.0, 10.0, 300000]),
+                extrudedHeight: [100000,100000,300000],//多边形的挤出面和椭圆面之间的距离（以米为单位）。
+                perPositionHeight: true,//对每个位置使用options.positions的height，而不使用options.height来确定高度
+                material: Cesium.Color.ORANGE.withAlpha(0.5),//橘色半透明
+                outline: true,
+                outlineColor: Cesium.Color.BLACK//黑色轮廓线
+            }
+        });
+
+        //多边形
+        viewer.entities.add({
+            name: '蓝色多边形',
+            polygon: {
+                hierarchy: {
+                    positions: Cesium.Cartesian3.fromDegreesArray([-99.0, 30.0,
+                    -85.0, 30.0,
+                    -85.0, 40.0,
+                    -99.0, 40.0]),
+                    holes: [{
+                        positions: Cesium.Cartesian3.fromDegreesArray([
+                            -97.0, 31.0,
+                            -97.0, 39.0,
+                            -87.0, 39.0,
+                            -87.0, 31.0
+                        ]),
+                        holes: [{
+                            positions: Cesium.Cartesian3.fromDegreesArray([
+                                -95.0, 33.0,
+                                -89.0, 33.0,
+                                -89.0, 37.0,
+                                -95.0, 37.0
+                            ]),
+                            holes: [{
+                                positions: Cesium.Cartesian3.fromDegreesArray([
+                                    -93.0, 34.0,
+                                    -91.0, 34.0,
+                                    -91.0, 36.0,
+                                    -93.0, 36.0
+                                ])
+                            }]
+                        }]
+                    }]
+                },
+                material: Cesium.Color.BLUE.withAlpha(0.5),
+                outline: true,
+                outlineColor: Cesium.Color.BLACK
+            }
+        });
+
+
+        //线
+        viewer.entities.add({
+            name: '红色线',
+            polyline: {
+                positions: Cesium.Cartesian3.fromDegreesArray([-75, 35,
+                -125, 35]),
+                width: 5,//多段线的宽度（以像素为单位）。
+                material: Cesium.Color.RED
+            }
+        });
+
+        //线
+        viewer.entities.add({
+            name: '发光线',
+            polyline: {
+                positions: Cesium.Cartesian3.fromDegreesArray([-75, 37,
+                -125, 37]),
+                width: 10,
+                material: new Cesium.PolylineGlowMaterialProperty({
+                    glowPower: 0.2,//发光强度的属性，以总线宽度的百分比表示。
+                    color: Cesium.Color.BLUE
+                })
+            }
+        });
+
+        //线
+        viewer.entities.add({
+            name: '橙色线',
+            polyline: {
+                positions: Cesium.Cartesian3.fromDegreesArrayHeights([-75, 39, 250000,
+                -125, 39, 250000]),
+                width: 5,
+                material: new Cesium.PolylineOutlineMaterialProperty({
+                    color: Cesium.Color.ORANGE,
+                    outlineWidth: 2,
+                    outlineColor: Cesium.Color.BLACK
+                })
+            }
+        });
+
+        //线
+        viewer.entities.add({
+            name: '箭头',
+            polyline: {
+                positions: Cesium.Cartesian3.fromDegreesArrayHeights([-75, 43, 500000,
+                -125, 43, 500000]),
+                width: 10,
+                followSurface: false,
+                material: new Cesium.PolylineArrowMaterialProperty(Cesium.Color.PURPLE)
+            }
+        });
+
+        //点
+        viewer.entities.add({
+            name: '点',
+            position: Cesium.Cartesian3.fromDegrees(104, 40),
+            point: {
+                pixelSize: 10,
+                color: Cesium.Color.YELLOW
+            }
+        });
+
+        //箱子
+        viewer.entities.add({
+            name: '蓝色箱子',
+            position: Cesium.Cartesian3.fromDegrees(115, 40, 0),
+            box: {
+                dimensions: new Cesium.Cartesian3(400000.0, 300000.0, 500000.0),
+                material: Cesium.Color.BLUE
+            }
+        });
+
+        //圆
+        viewer.entities.add({
+            position: Cesium.Cartesian3.fromDegrees(111.0, 40.0, 150000.0),
+            name: '绿色圆',
+            ellipse: {
+                semiMinorAxis: 300000.0,
+                semiMajorAxis: 300000.0,
+                height: 200000.0,
+                material: Cesium.Color.GREEN
+            }
+        });
+
+        //椭圆
+        viewer.entities.add({
+            position: Cesium.Cartesian3.fromDegrees(123.0, 40.0),
+            name: '红色椭圆',
+            ellipse: {
+                semiMinorAxis: 250000.0,
+                semiMajorAxis: 400000.0,
+                material: Cesium.Color.RED.withAlpha(0.5),
+                outline: true,
+                outlineColor: Cesium.Color.RED
+            }
+        });
+
+        //走廊
+        viewer.entities.add({
+            name: '红色走廊',
+            corridor: {
+                positions: Cesium.Cartesian3.fromDegreesArray([
+                    100.0, 40.0,
+                    105.0, 40.0,
+                    105.0, 35.0
+                ]),
+                width: 200000.0,
+                material: Cesium.Color.RED.withAlpha(0.5),
+                outline: true,
+                outlineColor: Cesium.Color.RED
+            }
+        });
+
+        //矩形
+        viewer.entities.add({
+            name: '红色矩形',
+            rectangle: {
+                coordinates: Cesium.Rectangle.fromDegrees(80.0, 20.0, 110.0, 25.0),
+                material: Cesium.Color.RED.withAlpha(0.5),
+                outline: true,
+                outlineColor: Cesium.Color.RED
+            }
+        });
+
+        //矩形
+        viewer.entities.add({
+            name: '条纹状材质的矩形',
+            rectangle: {
+                coordinates: Cesium.Rectangle.fromDegrees(-100.0, 20.0, -90.0, 30.0),
+                material: new Cesium.StripeMaterialProperty({
+                    evenColor: Cesium.Color.WHITE,
+                    oddColor: Cesium.Color.BLUE,
+                    repeat: 5
+                })
+            }
+        });
+
+        //球体
+        viewer.entities.add({
+            name: '红色球体',
+            position: Cesium.Cartesian3.fromDegrees(87.0, 40.0, 300000.0),
+            ellipsoid: {
+                radii: new Cesium.Cartesian3(300000.0, 300000.0, 300000.0),
+                material: Cesium.Color.RED.withAlpha(0.5),
+                outline: true,
+                outlineColor: Cesium.Color.BLACK
+            }
+        });
+        viewer.entities.add({
+            name: '红色球体',
+            position: Cesium.Cartesian3.fromDegrees(77.0, 40.0, 0.0),
+            ellipsoid: {
+                radii: new Cesium.Cartesian3(300000.0, 300000.0, 300000.0),
+                material: Cesium.Color.RED.withAlpha(0.5),
+                outline: true,
+                outlineColor: Cesium.Color.BLACK
+            }
+        });
+
+        //椭球
+        viewer.entities.add({
+            name: ' 蓝色椭球',
+            position: Cesium.Cartesian3.fromDegrees(94.0, 40.0, 300000.0),
+            ellipsoid: {
+                radii: new Cesium.Cartesian3(200000.0, 200000.0, 300000.0),
+                material: Cesium.Color.BLUE
+            }
+        });
+
+        //墙
+        viewer.entities.add({
+            name: '绿墙',
+            wall: {
+                positions: Cesium.Cartesian3.fromDegreesArrayHeights([107.0, 43.0, 100000.0,
+                    97.0, 43.0, 100000.0,
+                    97.0, 40.0, 100000.0,
+                    107.0, 40.0, 100000.0,
+                    107.0, 43.0, 100000.0]),
+                material: Cesium.Color.GREEN
+            }
+        });
+
+        //管道
+        function computeCircle(radius) {
+            var positions = [];
+            for (var i = 0; i < 360; i++) {
+                var radians = Cesium.Math.toRadians(i);
+                positions.push(new Cesium.Cartesian2(radius * Math.cos(radians), radius * Math.sin(radians)));
+            }
+            return positions;
+        }
+
+        function starPositions(arms, rOuter, rInner) {
+            var angle = Math.PI / arms;
+            var pos = [];
+            for (var i = 0; i < 2 * arms; i++) {
+                var r = (i % 2) === 0 ? rOuter : rInner;
+                var p = new Cesium.Cartesian2(Math.cos(i * angle) * r, Math.sin(i * angle) * r);
+                pos.push(p);
+            }
+            return pos;
+        }
+        viewer.entities.add({
+            name: '红色管道',
+            polylineVolume: {
+                positions: Cesium.Cartesian3.fromDegreesArray([85.0, 32.0,
+                    85.0, 36.0,
+                    89.0, 36.0]),
+                shape: computeCircle(60000.0),
+                material: Cesium.Color.RED
+            }
+        });
+
+        viewer.entities.add({
+            name: '空中星状管道',
+            polylineVolume: {
+                positions: Cesium.Cartesian3.fromDegreesArrayHeights([-102.0, 15.0, 100000.0,
+                -105.0, 20.0, 200000.0,
+                -110.0, 20.0, 100000.0]),
+                shape: starPositions(7, 30000.0, 20000.0),
+                outline: true,
+                outlineColor: Cesium.Color.WHITE,
+                outlineWidth: 1,
+                material: Cesium.Color.fromRandom({ alpha: 1.0 })
+            }
+        });
+
+        viewer.entities.add({
+            name: '贴地星状管道',
+            polylineVolume: {
+                positions: Cesium.Cartesian3.fromDegreesArray([-102.0, 15.0,
+                -105.0, 20.0,
+                -110.0, 20.0]),
+                shape: starPositions(7, 30000.0, 20000.0),
+                material: Cesium.Color.fromRandom({ alpha: 1.0 })
+            }
+        });
+
+        viewer.entities.add({
+            name: '白色管道',
+            polylineVolume: {
+                positions: Cesium.Cartesian3.fromDegreesArray([-104.0, 13.0,
+                -107.0, 18.0,
+                -112.0, 18.0]),
+                shape: computeCircle(40000.0),
+                material: Cesium.Color.WHITE
+            }
+        });
+
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <title>Mesh</title>
+    <link href="../Build/Cesium/Widgets/widgets.css" rel="stylesheet" />
+    <script src="../Build/Cesium/Cesium.js"></script>
+    <script src="plugin/CesiumMeshVisualizer.js"></script>
+    <style>
+        html,
+        body,
+        #cesiumContainer {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+    </style>
+
+</head>
+
+<body>
+    <div id="cesiumContainer"></div>
+
+    <script>
+        let osm = Cesium.createOpenStreetMapImageryProvider({
+            url: 'https://a.tile.openstreetmap.org/'
+        });
+        let viewer = new Cesium.Viewer('cesiumContainer', {
+            imageryProvider: osm,
+            contextOptions: {
+                webgl: {
+                    alpha: true
+                }
+            },
+            selectionIndicator: false,
+            animation: false,  //是否显示动画控件
+            baseLayerPicker: false, //是否显示图层选择控件
+            geocoder: false, //是否显示地名查找控件
+            timeline: false, //是否显示时间线控件
+            sceneModePicker: false, //是否显示投影方式控件
+            navigationHelpButton: false, //是否显示帮助信息控件
+            infoBox: false,  //是否显示点击要素之后显示的信息
+            fullscreenButton: false
+        });
+
+        //取消双击事件
+        viewer.cesiumWidget.screenSpaceEventHandler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
+        //设置homebutton的位置
+        Cesium.Camera.DEFAULT_VIEW_RECTANGLE =
+            Cesium.Rectangle.fromDegrees(110.15, 34.54, 110.25, 34.56);//Rectangle(west, south, east, north)
+        //设置初始位置
+        // viewer.camera.setView({
+        //     destination: Cesium.Cartesian3.fromDegrees(117.220206, 31.834866, 500)
+        // });
+        //开启深度检测
+        //viewer.scene.globe.depthTestAgainstTerrain = true;
+
+        look(117.220206, 31.834866, 5e4);
+
+        let MeshVisualizer = Cesium.MeshVisualizer;
+        let Mesh = Cesium.Mesh;
+        let MeshMaterial = Cesium.MeshMaterial;
+        let FramebufferTexture = Cesium.FramebufferTexture;
+        let GeometryUtils = Cesium.GeometryUtils;
+        let LOD = Cesium.LOD;
+
+        let e = Cesium.Cartesian3.fromDegrees(117.220206, 31.834866, 500);
+        let i = Cesium.Transforms.eastNorthUpToFixedFrame(e);
+        let r = new MeshVisualizer({
+            modelMatrix: i,
+            up: { z: 1 },
+            referenceAxisParameter: {
+                length: 11e3,
+                width: 10,
+                headLength: 100,
+                headWidth: 20
+            }
+        });
+        viewer.scene.primitives.add(r);
+
+        r.showReference = !0;
+        let s = new MeshMaterial({
+            defaultColor: "rgba(200,0,0,1.0)",
+            wireframe: !0,
+            side: MeshMaterial.Sides.FRONT
+        });
+        let t = new Cesium.SphereGeometry({
+            radius: 5e3,
+            vertexFormat: Cesium.VertexFormat.POSITION_ONLY
+        });
+        let a = new Mesh(t, s);
+        a.position.z += 5e3;
+        r.add(a);
+        setInterval(function () {
+            a.rotation.angle += 1;
+            a.modelMatrixNeedsUpdate = !0;
+        }, 20)
+
+
+        function look(e, i, r) {
+            let s = Cesium.Cartesian3.fromDegrees(e, i);
+            let t = Cesium.Transforms.eastNorthUpToFixedFrame(s);
+            let a = viewer.camera;
+            a.constrainedAxis = Cesium.Cartesian3.UNIT_Z;
+            a.lookAtTransform(t, new Cesium.Cartesian3(-r, -r, r));
+            setTimeout(function () {
+                a.lookAtTransform(Cesium.Matrix4.IDENTITY)
+            }, 100)
+        }
+
+    </script>
+</body>
+
+</html>

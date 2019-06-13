@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <title>Primitive几何</title>
+    <link href="../Build/Cesium/Widgets/widgets.css" rel="stylesheet" />
+    <script src="../Build/Cesium/Cesium.js"></script>
+    <style>
+        html,
+        body,
+        #cesiumContainer {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+    </style>
+
+</head>
+
+<body>
+    <div id="cesiumContainer"></div>
+    <script>
+        let osm = Cesium.createOpenStreetMapImageryProvider({
+            url: 'https://a.tile.openstreetmap.org/'
+        });
+        let viewer = new Cesium.Viewer('cesiumContainer', {
+            imageryProvider: osm,
+            contextOptions: {
+                webgl: {
+                    alpha: true
+                }
+            },
+            selectionIndicator: false,
+            animation: false,  //是否显示动画控件
+            baseLayerPicker: false, //是否显示图层选择控件
+            geocoder: false, //是否显示地名查找控件
+            timeline: false, //是否显示时间线控件
+            sceneModePicker: false, //是否显示投影方式控件
+            navigationHelpButton: false, //是否显示帮助信息控件
+            infoBox: false,  //是否显示点击要素之后显示的信息
+            fullscreenButton: false
+        });
+        //取消双击事件
+        viewer.cesiumWidget.screenSpaceEventHandler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
+        //设置homebutton的位置
+        Cesium.Camera.DEFAULT_VIEW_RECTANGLE =
+            Cesium.Rectangle.fromDegrees(110.15, 34.54, 110.25, 34.56);//Rectangle(west, south, east, north)
+        //设置初始位置
+        viewer.camera.setView({
+            destination: Cesium.Cartesian3.fromDegrees(110.20, 34.55, 3000000)
+        });
+
+        //开启深度检测
+        //viewer.scene.globe.depthTestAgainstTerrain = true;
+
+
+        //BoxGeometry
+        let box = new Cesium.BoxGeometry({
+            vertexFormat: Cesium.VertexFormat.POSITION_ONLY,
+            maximum: new Cesium.Cartesian3(250000.0, 250000.0, 250000.0),
+            minimum: new Cesium.Cartesian3(-250000.0, -250000.0, -250000.0)
+        });
+        let boxinstance = new Cesium.GeometryInstance({
+            geometry: Cesium.BoxGeometry.createGeometry(box),
+            modelMatrix: Cesium.Matrix4.multiplyByTranslation(
+                Cesium.Transforms.eastNorthUpToFixedFrame(Cesium.Cartesian3.fromDegrees(-100.0, 40.0)),
+                new Cesium.Cartesian3(0.0, 0.0, 450000.0),
+                new Cesium.Matrix4()
+            )
+        });
+        viewer.scene.primitives.add(new Cesium.Primitive({
+            geometryInstances: [boxinstance],
+            appearance: new Cesium.EllipsoidSurfaceAppearance({
+                material: Cesium.Material.fromType('Stripe')
+            })
+        }));
+
+        //BoxOutlineGeometry
+        let boxoutline = new Cesium.BoxOutlineGeometry({
+            maximum: new Cesium.Cartesian3(250000.0, 250000.0, 250000.0),
+            minimum: new Cesium.Cartesian3(-250000.0, -250000.0, -250000.0)
+        });
+        let boxoutlineinstance = new Cesium.GeometryInstance({
+            geometry: Cesium.BoxOutlineGeometry.createGeometry(boxoutline),
+            modelMatrix: Cesium.Matrix4.multiplyByTranslation(
+                Cesium.Transforms.eastNorthUpToFixedFrame(Cesium.Cartesian3.fromDegrees(-80.0, 40.0)),
+                new Cesium.Cartesian3(0.0, 0.0, 450000.0),
+                new Cesium.Matrix4()
+            ),
+            attributes: {
+                color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromRandom({ alpha: 1 }))
+            }
+        });
+
+        viewer.scene.primitives.add(new Cesium.Primitive({
+            geometryInstances: [boxoutlineinstance],
+            appearance: new Cesium.PerInstanceColorAppearance()
+        }));
+
+
+        //CircleGeometry 
+        let circle = new Cesium.CircleGeometry({
+            vertexFormat: Cesium.VertexFormat.POSITION_ONLY,
+            center: Cesium.Cartesian3.fromDegrees(-60.0, 40.0),
+            height: 200000.0,//离地高度
+            extrudedHeight: 200000.0,//拉伸高度，没起作用
+            radius: 200000.0
+        });
+        let circleinstance = new Cesium.GeometryInstance({
+            geometry: Cesium.CircleGeometry.createGeometry(circle),
+            attributes: {
+                color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromRandom({ alpha: 1 }))
+            }
+        });
+        viewer.scene.primitives.add(new Cesium.Primitive({
+            geometryInstances: [circleinstance],
+            appearance: new Cesium.PerInstanceColorAppearance()
+        }));
+
+        //CircleOutlineGeometry 
+        let circleoutlinein = new Cesium.CircleOutlineGeometry({
+            vertexFormat: Cesium.VertexFormat.POSITION_ONLY,
+            center: Cesium.Cartesian3.fromDegrees(-65.0, 40.0),
+            height: 200000.0,//离地高度
+            extrudedHeight: 200000.0,//拉伸高度
+            radius: 200000.0
+        });
+        let circleoutlineininstance = new Cesium.GeometryInstance({
+            geometry: Cesium.CircleOutlineGeometry.createGeometry(circleoutlinein),
+            attributes: {
+                color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromRandom({ alpha: 1 }))
+            }
+        });
+        viewer.scene.primitives.add(new Cesium.Primitive({
+            geometryInstances: [circleoutlineininstance],
+            appearance: new Cesium.PerInstanceColorAppearance()
+        }));
+
+        //CorridorGeometry  
+        let corridor = new Cesium.CorridorGeometry({
+            vertexFormat: Cesium.VertexFormat.POSITION_ONLY,
+            positions: Cesium.Cartesian3.fromDegreesArray([-72.0, 40.0, -70.0, 35.0]),
+            height: 100000.0,
+            extrudedHeight: 200000.0,
+            width: 100000,
+            cornerType: Cesium.CornerType.ROUNDED//Cesium.CornerType.BEVELED //Cesium.CornerType.ROUNDED //Cesium.CornerType.MITERED
+        });
+        let corridorinstance = new Cesium.GeometryInstance({
+            geometry: Cesium.CorridorGeometry.createGeometry(corridor),
+            attributes: {
+                color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromRandom({ alpha: 1 }))
+            }
+        });
+        viewer.scene.primitives.add(new Cesium.Primitive({
+            geometryInstances: [corridorinstance],
+            appearance: new Cesium.PerInstanceColorAppearance()
+        }));
+
+        //CorridorGeometry  
+        let corridoroutline = new Cesium.CorridorOutlineGeometry({
+            vertexFormat: Cesium.VertexFormat.POSITION_ONLY,
+            positions: Cesium.Cartesian3.fromDegreesArray([-72.0, 40.0, -70.0, 35.0]),
+            height: 0.0,
+            extrudedHeight: 100000.0,
+            width: 100000,
+            cornerType: Cesium.CornerType.ROUNDED
+        });
+        let corridoroutlineinstance = new Cesium.GeometryInstance({
+            geometry: Cesium.CorridorOutlineGeometry.createGeometry(corridoroutline),
+            attributes: {
+                color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromRandom({ alpha: 1 }))
+            }
+        });
+        viewer.scene.primitives.add(new Cesium.Primitive({
+            geometryInstances: [corridoroutlineinstance],
+            appearance: new Cesium.PerInstanceColorAppearance()
+        }));
+
+        //SphereGeometry  
+        let sphere = new Cesium.SphereGeometry({
+            radius: 100000.0,
+            vertexFormat: Cesium.VertexFormat.POSITION_ONLY
+        });
+        let sphereinstance = new Cesium.GeometryInstance({
+            geometry: Cesium.SphereGeometry.createGeometry(sphere),
+            modelMatrix: Cesium.Matrix4.multiplyByTranslation(
+                Cesium.Transforms.eastNorthUpToFixedFrame(Cesium.Cartesian3.fromDegrees(-80.0, 20.0)),
+                new Cesium.Cartesian3(0.0, 0.0, 450000.0),
+                new Cesium.Matrix4()
+            ),
+            attributes: {
+                color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromRandom({ alpha: 1 }))
+            }
+        });
+        viewer.scene.primitives.add(new Cesium.Primitive({
+            geometryInstances: [sphereinstance],
+            appearance: new Cesium.PerInstanceColorAppearance()
+        }));
+
+        //SphereOutlineGeometry   
+        let sphereoutline = new Cesium.SphereOutlineGeometry({
+            radius: 100000.0,
+            stackPartitions: 64,//包络线数量
+            slicePartitions: 64,
+            vertexFormat: Cesium.VertexFormat.POSITION_ONLY
+        });
+        let sphereoutlineinstance = new Cesium.GeometryInstance({
+            geometry: Cesium.SphereOutlineGeometry.createGeometry(sphereoutline),
+            modelMatrix: Cesium.Matrix4.multiplyByTranslation(
+                Cesium.Transforms.eastNorthUpToFixedFrame(Cesium.Cartesian3.fromDegrees(-80.0, 20.0)),
+                new Cesium.Cartesian3(0.0, 0.0, 50000.0),
+                new Cesium.Matrix4()
+            ),
+            attributes: {
+                color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromRandom({ alpha: 1 }))
+            }
+        });
+        viewer.scene.primitives.add(new Cesium.Primitive({
+            geometryInstances: [sphereoutlineinstance],
+            appearance: new Cesium.PerInstanceColorAppearance()
+        }));
+
+        //CylinderGeometry  
+        let cylinder = new Cesium.CylinderGeometry({
+            length: 200000,
+            topRadius: 80000,
+            bottomRadius: 200000,
+            vertexFormat: Cesium.VertexFormat.POSITION_ONLY
+        });
+        let cylinderinstance = new Cesium.GeometryInstance({
+            geometry: Cesium.CylinderGeometry.createGeometry(cylinder),
+            modelMatrix: Cesium.Matrix4.multiplyByTranslation(
+                Cesium.Transforms.eastNorthUpToFixedFrame(Cesium.Cartesian3.fromDegrees(-100.0, 20.0)),
+                new Cesium.Cartesian3(0.0, 0.0, 450000.0),
+                new Cesium.Matrix4()
+            ),
+            attributes: {
+                color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromRandom({ alpha: 1 }))
+            }
+        });
+        viewer.scene.primitives.add(new Cesium.Primitive({
+            geometryInstances: [cylinderinstance],
+            appearance: new Cesium.PerInstanceColorAppearance()
+        }));
+
+        //CylinderOutlineGeometry   
+        let cylinderoutline = new Cesium.CylinderOutlineGeometry({
+            length: 200000,
+            topRadius: 80000,
+            bottomRadius: 200000,
+            slices: 128,
+            numberOfVerticalLines: 64,
+            vertexFormat: Cesium.VertexFormat.POSITION_ONLY
+        });
+        let cylinderoutlineinstance = new Cesium.GeometryInstance({
+            geometry: Cesium.CylinderOutlineGeometry.createGeometry(cylinderoutline),
+            modelMatrix: Cesium.Matrix4.multiplyByTranslation(
+                Cesium.Transforms.eastNorthUpToFixedFrame(Cesium.Cartesian3.fromDegrees(-100.0, 20.0)),
+                new Cesium.Cartesian3(0.0, 0.0, 100000.0),
+                new Cesium.Matrix4()
+            ),
+            attributes: {
+                color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromRandom({ alpha: 1 }))
+            }
+        });
+        viewer.scene.primitives.add(new Cesium.Primitive({
+            geometryInstances: [cylinderoutlineinstance],
+            appearance: new Cesium.PerInstanceColorAppearance()
+        }));
+
+        //EllipsoidGeometry   
+        let ellipsoid = new Cesium.EllipsoidGeometry({
+            vertexFormat: Cesium.VertexFormat.POSITION_ONLY,
+            radii: new Cesium.Cartesian3(100000.0, 200000.0, 200000.0)
+        });
+        let ellipsoidinstance = new Cesium.GeometryInstance({
+            geometry: Cesium.EllipsoidGeometry.createGeometry(ellipsoid),
+            modelMatrix: Cesium.Matrix4.multiplyByTranslation(
+                Cesium.Transforms.eastNorthUpToFixedFrame(Cesium.Cartesian3.fromDegrees(-110.0, 20.0)),
+                new Cesium.Cartesian3(0.0, 0.0, 450000.0),
+                new Cesium.Matrix4()
+            ),
+            attributes: {
+                color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromRandom({ alpha: 1 }))
+            }
+        });
+        viewer.scene.primitives.add(new Cesium.Primitive({
+            geometryInstances: [ellipsoidinstance],
+            appearance: new Cesium.PerInstanceColorAppearance()
+        }));
+
+        //EllipsoidOutlineGeometry   
+        let ellipsoidoutline = new Cesium.EllipsoidOutlineGeometry({
+            vertexFormat: Cesium.VertexFormat.POSITION_ONLY,
+            radii: new Cesium.Cartesian3(100000.0, 200000.0, 200000.0),
+            stackPartitions: 16,
+            slicePartitions: 32,
+            //subdivisions:256
+        });
+        let ellipsoidoutlineinstance = new Cesium.GeometryInstance({
+            geometry: Cesium.EllipsoidOutlineGeometry.createGeometry(ellipsoidoutline),
+            modelMatrix: Cesium.Matrix4.multiplyByTranslation(
+                Cesium.Transforms.eastNorthUpToFixedFrame(Cesium.Cartesian3.fromDegrees(-110.0, 10.0)),
+                new Cesium.Cartesian3(0.0, 0.0, 450000.0),
+                new Cesium.Matrix4()
+            ),
+            attributes: {
+                color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromRandom({ alpha: 1 }))
+            }
+        });
+        viewer.scene.primitives.add(new Cesium.Primitive({
+            geometryInstances: [ellipsoidoutlineinstance],
+            appearance: new Cesium.PerInstanceColorAppearance()
+        }));
+
+
+        //PolylineGeometry   
+        let polyline = new Cesium.PolylineGeometry({
+            vertexFormat: Cesium.PolylineColorAppearance.VERTEX_FORMAT,
+            positions: Cesium.Cartesian3.fromDegreesArray([
+                0.0, 0.0,
+                5.0, 0.0,
+                5.0, 5.0
+            ]),
+            width: 10.0 //10个像素
+        });
+        let polylineinstance = new Cesium.GeometryInstance({
+            geometry: polyline,
+            attributes: {
+                color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromRandom({ alpha: 1 }))
+            }
+        });
+        viewer.scene.primitives.add(new Cesium.Primitive({
+            geometryInstances: [polylineinstance],
+            appearance: new Cesium.PolylineColorAppearance({
+                translucent: false
+            })
+        }));
+
+        setTimeout(() => {
+            Cesium.PolylineGeometry.pack(polyline, [10.0, 0.0], 1);
+        }, 5000);
+
+        //SimplePolylineGeometry   
+        let simplepolyline = new Cesium.SimplePolylineGeometry({
+            vertexFormat: Cesium.PolylineColorAppearance.VERTEX_FORMAT,
+            positions: Cesium.Cartesian3.fromDegreesArray([
+                5.0, 0.0,
+                10.0, 0.0,
+                10.0, 10.0
+            ])
+        });
+        let simplepolylineinstance = new Cesium.GeometryInstance({
+            geometry: simplepolyline,
+            attributes: {
+                color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromRandom({ alpha: 1 }))
+            }
+        });
+        viewer.scene.primitives.add(new Cesium.Primitive({
+            geometryInstances: [simplepolylineinstance],
+            appearance: new Cesium.PolylineColorAppearance({
+                translucent: false
+            })
+        }));
+
+        function computeCircle(radius) {
+            var positions = [];
+            for (var i = 0; i < 360; i = i + 10) {
+                var radians = Cesium.Math.toRadians(i);
+                positions.push(new Cesium.Cartesian2(radius * Math.cos(radians), radius * Math.sin(radians)));
+            }
+            return positions;
+        }
+
+        //PolylineVolumeGeometry   
+        let polylinevolume = new Cesium.PolylineVolumeGeometry({
+            vertexFormat: Cesium.VertexFormat.POSITION_ONLY,
+            polylinePositions: Cesium.Cartesian3.fromDegreesArray([
+                -80.0, 35.0,
+                -80.0, 30.0,
+                -70.0, 30.0
+            ]),
+            shapePositions: computeCircle(100000.0)
+        });
+        let polylinevolumeinstance = new Cesium.GeometryInstance({
+            geometry: polylinevolume,
+            attributes: {
+                color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromRandom({ alpha: 1 }))
+            }
+        });
+        viewer.scene.primitives.add(new Cesium.Primitive({
+            geometryInstances: [polylinevolumeinstance],
+            appearance: new Cesium.PerInstanceColorAppearance()
+        }));
+
+        //PolylineVolumeOutlineGeometry   
+        let polylinevolumeoutline = new Cesium.PolylineVolumeOutlineGeometry({
+            // vertexFormat: Cesium.VertexFormat.POSITION_ONLY,
+            polylinePositions: Cesium.Cartesian3.fromDegreesArray([
+                -90.0, 35.0,
+                -90.0, 30.0,
+                -80.0, 30.0
+            ]),
+            shapePositions: computeCircle(100000.0)
+        });
+        let polylinevolumeoutlineinstance = new Cesium.GeometryInstance({
+            geometry: polylinevolumeoutline,
+            attributes: {
+                color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromRandom({ alpha: 1 }))
+            }
+        });
+        viewer.scene.primitives.add(new Cesium.Primitive({
+            geometryInstances: [polylinevolumeoutlineinstance],
+            appearance: new Cesium.PerInstanceColorAppearance()
+        }));
+
+
+        //PolygonGeometry   
+        let polygon = new Cesium.PolygonGeometry({
+            vertexFormat: Cesium.PolylineColorAppearance.VERTEX_FORMAT,
+            polygonHierarchy: new Cesium.PolygonHierarchy(
+                Cesium.Cartesian3.fromDegreesArray([
+                    -60.0, 40.0,
+                    -60.0, 35.0,
+                    -50.0, 35.0,
+                    -50.0, 40.0
+                ])
+            ),
+            extrudedHeight: 300000
+        });
+        let polygoninstance = new Cesium.GeometryInstance({
+            geometry: polygon,
+            attributes: {
+                color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromRandom({ alpha: 1 }))
+            }
+        });
+        viewer.scene.primitives.add(new Cesium.Primitive({
+            geometryInstances: [polygoninstance],
+            appearance: new Cesium.PolylineColorAppearance({
+                translucent: false
+            })
+        }));
+
+        //PolygonOutlineGeometry   
+        let polygonoutline = new Cesium.PolygonOutlineGeometry({
+            vertexFormat: Cesium.PolylineColorAppearance.VERTEX_FORMAT,
+            polygonHierarchy: new Cesium.PolygonHierarchy(
+                Cesium.Cartesian3.fromDegreesArray([
+                    -50.0, 40.0,
+                    -50.0, 35.0,
+                    -40.0, 35.0,
+                    -40.0, 40.0
+                ])
+            ),
+            extrudedHeight: 300000
+        });
+        let polygonoutlineinstance = new Cesium.GeometryInstance({
+            geometry: polygonoutline,
+            attributes: {
+                color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromRandom({ alpha: 1 }))
+            }
+        });
+        viewer.scene.primitives.add(new Cesium.Primitive({
+            geometryInstances: [polygonoutlineinstance],
+            appearance: new Cesium.PolylineColorAppearance({
+                translucent: false
+            })
+        }));
+
+        //WallOutlineGeometry   
+        let walloutline = new Cesium.WallOutlineGeometry({
+            vertexFormat: Cesium.PolylineColorAppearance.VERTEX_FORMAT,
+            positions: Cesium.Cartesian3.fromDegreesArrayHeights([
+                19.0, 47.0, 100000.0,
+                19.0, 48.0, 100000.0,
+                20.0, 48.0, 100000.0,
+                20.0, 47.0, 100000.0,
+                19.0, 47.0, 100000.0
+            ])
+        });
+        let walloutlineinstance = new Cesium.GeometryInstance({
+            geometry: walloutline,
+            attributes: {
+                color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromRandom({ alpha: 1 }))
+            }
+        });
+        viewer.scene.primitives.add(new Cesium.Primitive({
+            geometryInstances: [walloutlineinstance],
+            appearance: new Cesium.PolylineColorAppearance({
+                translucent: false
+            })
+        }));
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <title>Mesh</title>
+    <link href="../Build/Cesium/Widgets/widgets.css" rel="stylesheet" />
+    <script src="../Build/Cesium/Cesium.js"></script>
+    <script src="plugin/CesiumMeshVisualizer.js"></script>
+    <style>
+        html,
+        body,
+        #cesiumContainer {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+    </style>
+
+</head>
+
+<body>
+    <div id="cesiumContainer"></div>
+
+    <script>
+        let osm = Cesium.createOpenStreetMapImageryProvider({
+            url: 'https://a.tile.openstreetmap.org/'
+        });
+        let viewer = new Cesium.Viewer('cesiumContainer', {
+            imageryProvider: osm,
+            contextOptions: {
+                webgl: {
+                    alpha: true
+                }
+            },
+            selectionIndicator: false,
+            animation: false,  //是否显示动画控件
+            baseLayerPicker: false, //是否显示图层选择控件
+            geocoder: false, //是否显示地名查找控件
+            timeline: false, //是否显示时间线控件
+            sceneModePicker: false, //是否显示投影方式控件
+            navigationHelpButton: false, //是否显示帮助信息控件
+            infoBox: false,  //是否显示点击要素之后显示的信息
+            fullscreenButton: false
+        });
+
+        //取消双击事件
+        viewer.cesiumWidget.screenSpaceEventHandler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
+        //设置homebutton的位置
+        Cesium.Camera.DEFAULT_VIEW_RECTANGLE =
+            Cesium.Rectangle.fromDegrees(110.15, 34.54, 110.25, 34.56);//Rectangle(west, south, east, north)
+        //设置初始位置
+        // viewer.camera.setView({
+        //     destination: Cesium.Cartesian3.fromDegrees(117.220206, 31.834866, 500)
+        // });
+        //开启深度检测
+        //viewer.scene.globe.depthTestAgainstTerrain = true;
+
+
+
+
+        var homePosition = [117.220206, 31.834866, 3e4];
+
+        initWork()
+
+        function initWork() {
+            viewer.scene.debugShowFramesPerSecond = !0;
+            viewer.scene.globe.depthTestAgainstTerrain = !0;
+            look(homePosition[0], homePosition[1], homePosition[2])
+            let MeshVisualizer = Cesium.MeshVisualizer;
+            let Mesh = Cesium.Mesh;
+            let MeshMaterial = Cesium.MeshMaterial;
+            let FramebufferTexture = Cesium.FramebufferTexture
+            let GeometryUtils = Cesium.GeometryUtils;
+            let LOD = Cesium.LOD, CSG = Cesium.CSG;
+            let e = Cesium.Cartesian3.fromDegrees(homePosition[0], homePosition[1], 1e3);
+            let i = Cesium.Transforms.eastNorthUpToFixedFrame(e);
+            let r = new MeshVisualizer({
+                modelMatrix: i,
+                up: { z: 1 },
+                referenceAxisParameter: {
+                    length: 3e3,
+                    width: 10,
+                    headLength: 100,
+                    headWidth: 20
+                }
+            });
+            viewer.scene.primitives.add(r);
+            r.showReference = !0;
+            let s = new MeshMaterial({
+                defaultColor: "rgba(0,0,255,1.0)",
+                wireframe: !0,
+                side: MeshMaterial.Sides.DOUBLE
+            });
+            let t = new Cesium.Cartesian3(1e4, 5e3, 5e3);
+            let a = Cesium.BoxGeometry.createGeometry(Cesium.BoxGeometry.fromDimensions({
+                dimensions: t,
+                vertexFormat: Cesium.VertexFormat.POSITION_ONLY
+            }));
+            let o = GeometryUtils.toCSG(a);
+            let n = new Mesh(o, s); r.add(n);
+            let m = new Cesium.SphereGeometry({
+                radius: 5e3,
+                vertexFormat: Cesium.VertexFormat.POSITION_ONLY
+            });
+            m = Cesium.SphereGeometry.createGeometry(m);
+            m = CSG.toCSG(m);
+            let u = new Mesh(m, s);
+            u.position = new Cesium.Cartesian3(2e4, 0, 0);
+            r.add(u);
+            setTimeout(function () {
+                var e = o.union(m);
+                let i = new Mesh(e, s);
+                i.position = new Cesium.Cartesian3(4e4, 0, 0);
+                r.add(i)
+            }, 1e3);
+            setTimeout(function () {
+                let e = o.intersect(m);
+                let i = new Mesh(e, s);
+                i.position = new Cesium.Cartesian3(6e4, 0, 0);
+                r.add(i)
+            }, 5e3);
+            setTimeout(function () {
+                let e = m.subtract(o);
+                let i = new Mesh(e, s);
+                i.position = new Cesium.Cartesian3(8e4, 0, 0);
+                r.add(i)
+            }, 1e4);
+            setTimeout(function () {
+                let e = o.subtract(m);
+                let i = new Mesh(e, s);
+                i.position = new Cesium.Cartesian3(1e5, 0, 0);
+                r.add(i)
+            }, 15e3);
+            let C = CSG.cube({
+                center: [0, 0, 0],
+                radius: 2e3
+            });
+            let d = new MeshMaterial({ defaultColor: "rgba(255,0,0,1)" });
+            r.add(new Mesh({
+                geometry: C,
+                material: d,
+                position: new Cesium.Cartesian3(-2e4, 0, 0)
+            }))
+        }
+        function look(e, i, r) {
+            let s = Cesium.Cartesian3.fromDegrees(e, i),
+                t = Cesium.Transforms.eastNorthUpToFixedFrame(s),
+                a = viewer.camera;
+            a.constrainedAxis = Cesium.Cartesian3.UNIT_Z;
+            a.lookAtTransform(t, new Cesium.Cartesian3(-r, -r, r));
+            setTimeout(function () {
+                a.lookAtTransform(Cesium.Matrix4.IDENTITY)
+            }, 100)
+        }
+    </script>
+</body>
+
+</html>

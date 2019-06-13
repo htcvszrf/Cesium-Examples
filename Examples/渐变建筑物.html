@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <title>渐变建筑物表面</title>
+    <link href="../Build/Cesium/Widgets/widgets.css" rel="stylesheet" />
+    <script src="../Build/Cesium/Cesium.js"></script>
+    <script src="../Source/JSON/building.js"></script>
+    <style>
+        html,
+        body,
+        #cesiumContainer {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+    </style>
+
+</head>
+
+<body>
+    <div id="cesiumContainer"></div>
+    <script>
+        let osm = Cesium.createOpenStreetMapImageryProvider({
+            url: 'https://a.tile.openstreetmap.org/'
+        });
+        let viewer = new Cesium.Viewer('cesiumContainer', {
+            imageryProvider: osm,
+            contextOptions: {
+                webgl: {
+                    alpha: true
+                }
+            },
+            selectionIndicator: false,
+            animation: false,  //是否显示动画控件
+            baseLayerPicker: false, //是否显示图层选择控件
+            geocoder: false, //是否显示地名查找控件
+            timeline: false, //是否显示时间线控件
+            sceneModePicker: false, //是否显示投影方式控件
+            navigationHelpButton: false, //是否显示帮助信息控件
+            infoBox: false,  //是否显示点击要素之后显示的信息
+            fullscreenButton: false
+        });
+        //取消双击事件
+        viewer.cesiumWidget.screenSpaceEventHandler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
+        //设置homebutton的位置
+        Cesium.Camera.DEFAULT_VIEW_RECTANGLE =
+            Cesium.Rectangle.fromDegrees(110.15, 34.54, 110.25, 34.56);//Rectangle(west, south, east, north)
+        //设置初始位置
+        viewer.camera.setView({
+            destination: Cesium.Cartesian3.fromDegrees(110.20, 34.55, 3000000)
+        });
+
+        //开启深度检测
+        viewer.scene.globe.depthTestAgainstTerrain = true;
+
+        console.log(buildingGeojson);
+
+        for (let i = 0; i < 10; i++) {//buildingGeojson.features.length
+            let height = buildingGeojson.features[i].properties.floor * 3;
+
+            let geotype = buildingGeojson.features[i].geometry.type.toUpperCase();
+
+            let coordinates = buildingGeojson.features[i].geometry.coordinates;
+
+            if (geotype == 'POLYGON') {
+                console.log(coordinates);
+            } else if (geotype == 'MULTIPOLYGON') {
+                for (let j = 0; j < coordinates.length; j++) {
+                    for (let k = 0; k < coordinates[j].length; k++) {
+                        let positions = [];
+                        for (let l = 0; l < coordinates[j][k].length; l++) {
+                            positions.push(coordinates[j][k][l][0]);
+                            positions.push(coordinates[j][k][l][1]);
+                            positions.push(height);
+                        }
+                        viewer.entities.add({
+                            name: 'Red wall at height',
+                            wall: {
+                                positions: Cesium.Cartesian3.fromDegreesArrayHeights(positions),
+                                material: new Cesium.ImageMaterialProperty({
+                                    image: getColorRamp([0.0, 1.0], true),
+                                    // color: Cesium.Color.WHITE.withAlpha(0.1)
+                                }),
+                                outline: true,
+                                outlineColor: Cesium.Color.LIGHTGRAY,
+                                outlineWidth: 1,
+                            }
+                        });
+                        viewer.entities.add({
+                            name: '橙色多边形',
+                            polygon: {
+                                hierarchy: Cesium.Cartesian3.fromDegreesArrayHeights(positions),
+                                extrudedHeight: height,//多边形的挤出面和椭圆面之间的距离（以米为单位）。
+                                perPositionHeight: true,//对每个位置使用options.positions的height，而不使用options.height来确定高度
+                                material: Cesium.Color.GRAY,//橘色半透明
+                            }
+                        });
+                    }
+                }
+            }
+        }
+
+        viewer.zoomTo(viewer.entities);
+
+
+        function getColorRamp(elevationRamp, isVertical = true) {
+            let ramp = document.createElement('canvas');
+            ramp.width = isVertical ? 1 : 100;
+            ramp.height = isVertical ? 100 : 1;
+            let ctx = ramp.getContext('2d');
+
+            let values = elevationRamp;
+            let grd = isVertical ? ctx.createLinearGradient(0, 0, 0, 100) : ctx.createLinearGradient(0, 0, 100, 0);
+            grd.addColorStop(values[0], 'rgba(255,255,255,1)'); //black
+            grd.addColorStop(values[1], 'rgba(0,0,0,1)'); //white
+
+            ctx.globalAlpha = 0.3;
+            ctx.fillStyle = grd;
+            if (isVertical)
+                ctx.fillRect(0, 0, 1, 100);
+            else
+                ctx.fillRect(0, 0, 100, 1);
+
+            return ramp;
+        }
+
+    </script>
+</body>
+
+</html>

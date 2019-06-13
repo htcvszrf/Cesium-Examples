@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <title>扇形</title>
+    <link href="../Build/Cesium/Widgets/widgets.css" rel="stylesheet" />
+    <script src="../Build/Cesium/Cesium.js"></script>
+    <script src="plugin/EllipseGeometryLibraryEx.js"></script>
+    <script src="plugin/PrimitivePolyline.js"></script>
+    <script src="plugin/PrimitiveTriangles.js"></script>
+    <style>
+        html,
+        body,
+        #cesiumContainer {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        #menu {
+            position: absolute;
+            top: 80px;
+            left: 10px;
+            z-index: 999;
+        }
+    </style>
+
+</head>
+
+<body>
+    <div id="cesiumContainer"></div>
+    <div id="menu">
+        <p>
+            <button onclick="setvisible('position')">定位</button>
+        </p>
+        <p>
+            <button onclick="setvisible('add')">添加</button>
+        </p>
+        <p>
+            <button onclick="setvisible('fill')">填充</button>
+        </p>
+        <p>
+            <button onclick="setvisible('boeder')">边框</button>
+        </p>
+        <p>
+            <button onclick="setvisible('clear')">删除</button>
+        </p>
+    </div>
+    <script>
+        let osm = Cesium.createOpenStreetMapImageryProvider({
+            url: 'https://a.tile.openstreetmap.org/'
+        });
+        let viewer = new Cesium.Viewer('cesiumContainer', {
+            imageryProvider: osm,
+            contextOptions: {
+                webgl: {
+                    alpha: true
+                }
+            },
+            selectionIndicator: false,
+            animation: false,  //是否显示动画控件
+            baseLayerPicker: false, //是否显示图层选择控件
+            geocoder: false, //是否显示地名查找控件
+            timeline: false, //是否显示时间线控件
+            sceneModePicker: false, //是否显示投影方式控件
+            navigationHelpButton: false, //是否显示帮助信息控件
+            infoBox: false,  //是否显示点击要素之后显示的信息
+            fullscreenButton: false
+        });
+        var lat = 42.006;
+        var lon = 128.055;
+        //取消双击事件
+        viewer.cesiumWidget.screenSpaceEventHandler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
+        //设置homebutton的位置
+        Cesium.Camera.DEFAULT_VIEW_RECTANGLE =
+            Cesium.Rectangle.fromDegrees(lon - 1, lat - 1, lon + 1, lat + 1);//Rectangle(west, south, east, north)
+        //设置初始位置
+        viewer.camera.setView({
+            destination: Cesium.Cartesian3.fromDegrees(lon, lat, 300000)
+        });
+        //开启深度检测
+        //viewer.scene.globe.depthTestAgainstTerrain = true;
+
+
+        var primitiveFill;
+        var primitiveBorder;
+        var ellipsoid = Cesium.Ellipsoid.WGS84;
+        function setvisible(value) {
+            switch (value) {
+                case 'position':
+                    viewer.camera.setView({
+                        destination: Cesium.Cartesian3.fromDegrees(lon, lat, 30000)
+                    });
+                    break;
+                case 'add':
+                    var center = new Cesium.Cartographic(Cesium.Math.toRadians(lon), Cesium.Math.toRadians(lat), 1500)
+                    var eopt = {};
+                    eopt.semiMinorAxis = 9000;
+                    eopt.semiMajorAxis = 9000;
+                    eopt.rotation = Math.PI;//Math.PI;//逆时针转
+                    eopt.center = Cesium.Cartesian3.fromRadians(center.longitude, center.latitude, center.height);
+                    eopt.granularity = Math.PI * 2.0 / parseFloat(180);
+                    eopt.angle = Math.PI * 3.0 / 4.0;//正南为0度
+                    var ellipse = EllipseGeometryLibraryEx.computeSectorEdgePositions(eopt);
+                    var raiseopt = {};
+                    raiseopt.ellipsoid = ellipsoid;
+                    raiseopt.height = center.height;
+                    raiseopt.extrudedHeight = 0;
+                    ellipse.outerPositions = EllipseGeometryLibraryEx.raisePositionsToHeight(ellipse.outerPositions, raiseopt, false);
+                    //转换
+                    var cartesians = [];
+                    for (var i = 0; i < ellipse.outerPositions.length; i += 3) {
+                        var cartesianTemp = new Cesium.Cartesian3(ellipse.outerPositions[i], ellipse.outerPositions[i + 1], ellipse.outerPositions[i + 2]);
+                        cartesians.push(cartesianTemp);
+                    }
+                    //填充
+                    var cartesiansPointsFill = [];
+                    var colorsFill = [];
+                    for (var i = 1; i < cartesians.length; i++) {
+                        cartesiansPointsFill.push(cartesians[i - 1]);
+                        cartesiansPointsFill.push(cartesians[i]);
+                        cartesiansPointsFill.push(eopt.center);
+                        colorsFill.push(0);
+                        colorsFill.push(0);
+                        colorsFill.push(1);
+                        colorsFill.push(1);
+                        colorsFill.push(0);
+                        colorsFill.push(0);
+                        colorsFill.push(1);
+                        colorsFill.push(1);
+                        colorsFill.push(0);
+                        colorsFill.push(0);
+                        colorsFill.push(1);
+                        colorsFill.push(1);
+                    }
+                    primitiveFill = new PrimitiveTriangles({ 'viewer': viewer, 'Cartesians': cartesiansPointsFill, 'Colors': colorsFill });
+                    //边框
+                    var cartesiansPointsBorder = [];
+                    var colorsBorder = [];
+                    cartesiansPointsBorder.push(eopt.center);
+                    cartesiansPointsBorder.push(cartesians[0]);
+                    colorsBorder.push(1);
+                    colorsBorder.push(0);
+                    colorsBorder.push(0);
+                    colorsBorder.push(1);
+                    colorsBorder.push(1);
+                    colorsBorder.push(0);
+                    colorsBorder.push(0);
+                    colorsBorder.push(1);
+                    for (var i = 1; i < cartesians.length; i++) {
+                        cartesiansPointsBorder.push(cartesians[i - 1]);
+                        cartesiansPointsBorder.push(cartesians[i]);
+                        cartesiansPointsBorder.push(eopt.center);
+                        cartesiansPointsBorder.push(cartesians[i]);
+                        colorsBorder.push(1);
+                        colorsBorder.push(0);
+                        colorsBorder.push(0);
+                        colorsBorder.push(1);
+                        colorsBorder.push(1);
+                        colorsBorder.push(0);
+                        colorsBorder.push(0);
+                        colorsBorder.push(1);
+                        colorsBorder.push(1);
+                        colorsBorder.push(0);
+                        colorsBorder.push(0);
+                        colorsBorder.push(1);
+                        colorsBorder.push(1);
+                        colorsBorder.push(0);
+                        colorsBorder.push(0);
+                        colorsBorder.push(1);
+                    }
+                    primitiveBorder = new PrimitivePolyline({ 'viewer': viewer, 'Cartesians': cartesiansPointsBorder, 'Colors': colorsBorder });
+
+                    break;
+                case 'fill':
+                    if (primitiveFill) {
+                        primitiveFill.primitive.show = !primitiveFill.primitive.show;
+                    }
+                    break;
+                case 'boeder':
+                    if (primitiveBorder) {
+                        primitiveBorder.primitive.show = !primitiveBorder.primitive.show;
+                    }
+                    break;
+                case 'clear':
+                    if (primitiveFill) {
+                        primitiveFill.remove();
+                    }
+                    if (primitiveBorder) {
+                        primitiveBorder.remove();
+                    }
+                    break;
+            }
+        }
+
+        setvisible('add');
+    </script>
+</body>
+
+</html>
