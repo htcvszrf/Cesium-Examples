@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <title>日照分析</title>
+    <link href="../Build/Cesium/Widgets/widgets.css" rel="stylesheet" />
+    <script src="../Build/Cesium/Cesium.js"></script>
+    <style>
+        html,
+        body,
+        #cesiumContainer {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        #menu {
+            position: absolute;
+            top: 80px;
+            left: 10px;
+            z-index: 999;
+        }
+    </style>
+
+</head>
+
+<body>
+    <div id="cesiumContainer"></div>
+    <div id="menu">
+        <p>
+            <button onclick="setvisible('play')">播放</button>
+        </p>
+        <p>
+            <button onclick="setvisible('stop')">暂停</button>
+        </p>
+    </div>
+    <script>
+        let osm = Cesium.createOpenStreetMapImageryProvider({
+            url: 'https://a.tile.openstreetmap.org/'
+        });
+        let viewer = new Cesium.Viewer('cesiumContainer', {
+            imageryProvider: osm,
+            contextOptions: {
+                webgl: {
+                    alpha: true
+                }
+            },
+            selectionIndicator: false,
+            animation: false,  //是否显示动画控件
+            baseLayerPicker: false, //是否显示图层选择控件
+            geocoder: false, //是否显示地名查找控件
+            timeline: false, //是否显示时间线控件
+            sceneModePicker: false, //是否显示投影方式控件
+            navigationHelpButton: false, //是否显示帮助信息控件
+            infoBox: false,  //是否显示点击要素之后显示的信息
+            fullscreenButton: false
+        });
+        //取消双击事件
+        viewer.cesiumWidget.screenSpaceEventHandler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
+        //设置homebutton的位置
+        Cesium.Camera.DEFAULT_VIEW_RECTANGLE =
+            Cesium.Rectangle.fromDegrees(110.15, 34.54, 110.25, 34.56);//Rectangle(west, south, east, north)
+        //设置初始位置
+        viewer.camera.setView({
+            destination: Cesium.Cartesian3.fromDegrees(110.20, 34.55, 3000000)
+        });
+
+        //开启深度检测
+        viewer.scene.globe.depthTestAgainstTerrain = true;
+
+
+        let tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
+			url: '../Source/3DTiles/building_1/tileset.json' // '../Source/3DTiles/building/tileset.json'
+		}));
+        tileset.readyPromise.then(function (tileset) {
+			viewer.scene.primitives.add(tileset);
+			viewer.zoomTo(tileset, new Cesium.HeadingPitchRange(0.5, -0.2, tileset.boundingSphere.radius * 1.0));
+		}).otherwise(function (error) {
+			console.log(error);
+		});
+
+        var stopTime = null;
+        function stratPlay() {
+            if (viewer.clock.shouldAnimate = !0, stopTime)
+                viewer.clock.currentTime = stopTime;
+            else {
+                var e = "2019-06-18",
+                    t = new Date(e),
+                    i = "10",
+                    a = "18",
+                    r = new Date(new Date(t).setHours(Number(i))),
+                    o = new Date(new Date(t).setHours(Number(a)));
+                viewer.scene.globe.enableLighting = !0,
+                    viewer.shadows = !0,
+                    viewer.clock.startTime = Cesium.JulianDate.fromDate(r),
+                    viewer.clock.currentTime = Cesium.JulianDate.fromDate(r),
+                    viewer.clock.stopTime = Cesium.JulianDate.fromDate(o),
+                    viewer.clock.clockRange = Cesium.ClockRange.LOOP_STOP,
+                    viewer.clock.clockStep = Cesium.ClockStep.SYSTEM_CLOCK_MULTIPLIER,
+                    viewer.clock.multiplier = 1600
+            }
+        }
+        function stopPlay() {
+            stopTime = viewer.clock.currentTime,
+                viewer.clock.shouldAnimate = !1
+        }
+
+        function setvisible(value) {
+            switch (value) {
+                case 'play':
+                    stratPlay();
+                    break;
+                case 'stop':
+                    stopPlay();
+                    break;
+            }
+        }
+    </script>
+</body>
+
+</html>

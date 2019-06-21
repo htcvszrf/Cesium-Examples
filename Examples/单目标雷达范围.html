@@ -6,10 +6,12 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport"
         content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <title>动态扫描</title>
+    <title>单目标雷达范围</title>
     <link href="../Build/Cesium/Widgets/widgets.css" rel="stylesheet" />
     <script src="../Build/Cesium/Cesium.js"></script>
-    <script src="plugin/sensor.js"></script>
+    <script src="plugin/computeVertexNormals.js"></script>
+    <script src="plugin/CylinderGeometry.js"></script>
+    <script src="plugin/RadarPrimitive.js"></script>
     <style>
         html,
         body,
@@ -47,7 +49,7 @@
             navigationHelpButton: false, //是否显示帮助信息控件
             infoBox: false,  //是否显示点击要素之后显示的信息
             fullscreenButton: false,
-            shouldAnimate:true
+            shouldAnimate: true
         });
 
         //取消双击事件
@@ -61,29 +63,17 @@
         });
         //开启深度检测
         //viewer.scene.globe.depthTestAgainstTerrain = true;
+        
 
-
-        let r = new Cesium.HeadingPitchRoll(Cesium.Math.toRadians(90),
-            Cesium.Math.toRadians(0),
-            Cesium.Math.toRadians(0));
-        let l = Cesium.Cartesian3.fromDegrees(117.224, 31.819, 128);
-        let sensorEntity = viewer.entities.add({
-            position: l,
-            orientation: Cesium.Transforms.headingPitchRollQuaternion(l, r),
-            rectangularSensor: new Cesium.RectangularSensorGraphics({
-                radius: 100000,
-                xHalfAngle: Cesium.Math.toRadians(50),
-                yHalfAngle: Cesium.Math.toRadians(50),
-                material: new Cesium.Color(0, 1, 1, .4),
-                lineColor: new Cesium.Color(0, 1, 1, 1),
-                showScanPlane: true,
-                scanPlaneColor: new Cesium.Color(0, 1, 1, 1),
-                scanPlaneMode: "vertical",
-                scanPlaneRate: 3,
-                showThroughEllipsoid: !1
-            })
+        new Cesium.RadarPrimitive(viewer, {
+            position:Cesium.Cartesian3.fromDegrees(117.224, 31.819, 128),
+            angle: 50,
+            radius: 300000,
+            color: { red: 1, green: 0, blue: 0, alpha: 0.4 },
+            lineColor: { red: 1, green: 1, blue: 1, alpha: 0.9 }
         })
 
+        
     </script>
 </body>
 
